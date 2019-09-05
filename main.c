@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+//TESTE
+
 typedef struct {
     float l, a, x, y; // l = largura, a = altura
 } dimpos; // tudo que tem dimensões e/ou posição
