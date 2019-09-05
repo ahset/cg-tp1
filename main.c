@@ -8,8 +8,6 @@
 #include <time.h>
 #include <unistd.h>
 
-//TESTE3
-
 typedef struct {
     float l, a, x, y; // l = largura, a = altura
 } dimpos; // tudo que tem dimensões e/ou posição
