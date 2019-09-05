@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-//TESTE
+//TESTE2
 
 typedef struct {
     float l, a, x, y; // l = largura, a = altura
