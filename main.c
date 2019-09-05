@@ -135,13 +135,17 @@ void desenha() {
     desenhaObjeto(idTexturaBola, bola);
 
     // diz que o player 1 ganhou quando a bola passa pela direita
+    // e reinicia
     if((bola.x-bola.l/2) >= mundo.l){
-    desenhaMundo(idTexturaP1W);
+        desenhaMundo(idTexturaP1W);
+        //inicializa();
     }
 
     // diz que o player 2 ganhou quando a bola passa pela esquerda
+    // e reinicia
     if((bola.x+bola.l/2) <= 0){
         desenhaMundo(idTexturaP2W);
+        //inicializa();
     }
 
 
@@ -226,16 +230,18 @@ void atualizaCena(int periodo) {
     // muda a direção da bola quando ela atinge a barra da esquerda
     if(((bola.x-bola.l/2) <= (barraE.x+barraE.l/2)) && 
         ((barraE.y+barraE.a/2) >= bola.y) &&
-        ((barraE.y-barraE.a/2) <= bola.y))
+        ((barraE.y-barraE.a/2) <= bola.y)){
         acresce.x *= -1;
+    }
     // muda a direção da bola quando ela atinge a barra da direita
     if(((bola.x+bola.l/2) >= (barraD.x-barraD.l/2)) && 
         ((barraD.y+barraD.a/2) >= bola.y) && ((barraD.y-barraD.a/2) <= bola.y))
         acresce.x *= -1;
     
     // faz a bola mudar de posição ao longo do tempo (animação)
-    bola.x += acresce.x;
-    bola.y += acresce.y;
+    // também aumenta a velocidade da bola com o decorrer do tempo
+    bola.x += acresce.x+glutGet(GLUT_ELAPSED_TIME)/20000;
+    bola.y += acresce.y+glutGet(GLUT_ELAPSED_TIME)/20000;
  
     // pede ao GLUT para redesenhar a tela, assim que possível
     glutPostRedisplay();
