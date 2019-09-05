@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
 //TESTE3
 
@@ -13,9 +14,7 @@ typedef struct {
     float l, a, x, y; // l = largura, a = altura
 } dimpos; // tudo que tem dimensões e/ou posição
 
-dimpos mundo, barra, barraE, barraD, bola, acresce;
-// barra é qualquer barra (criei pra dizer as dimensões delas
-// e como são iguais, não faz diferença se é a da esquerda ou da direita)
+dimpos mundo, barraE, barraD, bola, acresce;
 // barraE é a barra da esquerda e barraD é a barra da direita
 // acresce é a variável que muda de sinal quando a bola atinge
 // as bordas do mundo
@@ -28,6 +27,8 @@ bool keyStates[256] = {false};
 GLuint idTexturaFundo; // imagem do fundo
 GLuint idTexturaBarra; // imagem da barra
 GLuint idTexturaBola; // imagem da bola
+GLuint idTexturaP1W; // imagem "player 1 wins"
+GLuint idTexturaP2W; // imagem "player 2 wins"
 
 GLuint carregaTextura(const char* arquivo) {
     GLuint idTextura = SOIL_load_OGL_texture(
@@ -44,6 +45,30 @@ GLuint carregaTextura(const char* arquivo) {
     return idTextura;
 }
 
+// desenha texturas do tamanho do mundo
+void desenhaMundo(GLuint id){
+    glBindTexture(GL_TEXTURE_2D, id);
+    glBegin(GL_TRIANGLE_FAN);
+        glTexCoord2f(0, 0); glVertex3f(0, 0, 0);
+        glTexCoord2f(1, 0); glVertex3f(mundo.l, 0, 0);
+        glTexCoord2f(1, 1); glVertex3f(mundo.l, mundo.a, 0);
+        glTexCoord2f(0, 1); glVertex3f(0, mundo.a, 0);
+    glEnd();
+}
+
+void desenhaObjeto(GLuint id, dimpos objeto){
+    glBindTexture(GL_TEXTURE_2D, id);
+    glPushMatrix();
+        glTranslatef(objeto.x, objeto.y, 0);
+        glBegin(GL_TRIANGLE_FAN);
+            glTexCoord2f(0, 0); glVertex3f(-objeto.l/2, -objeto.a/2, 0);
+            glTexCoord2f(1, 0); glVertex3f(objeto.l/2, -objeto.a/2, 0);
+            glTexCoord2f(1, 1); glVertex3f(objeto.l/2, objeto.a/2, 0);
+            glTexCoord2f(0, 1); glVertex3f(-objeto.l/2, objeto.a/2, 0);
+        glEnd();
+    glPopMatrix();   
+}
+
 void inicializa() {
     glClearColor(1, 1, 1, 1);
 
@@ -55,6 +80,8 @@ void inicializa() {
     idTexturaFundo = carregaTextura("background.png");
     idTexturaBarra = carregaTextura("barra.png");
     idTexturaBola = carregaTextura("ufo.png");
+    idTexturaP1W = carregaTextura("p1w.png");
+    idTexturaP2W = carregaTextura("p2w.png");
 
     // valores iniciais das dimensões e posições dos objetos da cena
     // as dimensões não mudam, as posições vão mudar em outro lugar
@@ -67,19 +94,18 @@ void inicializa() {
     bola.x = mundo.l/2;
     bola.y = mundo.a/2;
     
-    barra.l = mundo.l/4;
-    barra.a = mundo.a/20;
-    barraE.x = (mundo.l/15)*14;
-    barraE.y = mundo.a/2;
-    barraD.x = mundo.l/15;
-    barraD.y = mundo.a/2;
+    barraE.l = barraD.l = mundo.a/20;
+    barraE.a = barraD.a = mundo.l/8;
+    barraD.x = (mundo.l/15)*14;
+    barraD.y = barraE.y = mundo.a/2;
+    barraE.x = mundo.l/15;
 
     // eu tinha pensado em fazer a posição da bolinha mudar
     // com um valor inicial aleatório, pra não ser sempre a mesma coisa
     // srand(time(0));
 
-    acresce.x = 1; // rand()%10+1;
-    acresce.y = 1; // rand()%10+1;
+    acresce.x = 10; // rand()%10+1;
+    acresce.y = 2; // rand()%10+1;
 }
 
 void desenha() {
@@ -90,60 +116,36 @@ void desenha() {
     // habilita o uso de texturas
     glEnable(GL_TEXTURE_2D);
 
-    // começa a usar a textura que criamos
-    glBindTexture(GL_TEXTURE_2D, idTexturaFundo);
-    glBegin(GL_TRIANGLE_FAN);
-        // associamos um canto da textura para cada vértice
-        glTexCoord2f(0, 0); glVertex3f(0, 0, 0);
-        glTexCoord2f(1, 0); glVertex3f(mundo.l, 0, 0);
-        glTexCoord2f(1, 1); glVertex3f(mundo.l, mundo.a, 0);
-        glTexCoord2f(0, 1); glVertex3f(0, mundo.a, 0);
-    glEnd();
+    desenhaMundo(idTexturaFundo);
 
     // se alguma das teclas de mudança de posição das barras
     // estiver pressionada (true) e a barra não tiver atingido
-    // a borda da "mesa" de ping pong, continua mudando a posição
-    if(keyStates[48]==true && barraD.y>50+barra.l/2)
+    // a borda do mundo, continua mudando a posição
+    if(keyStates[48]==true && barraD.y>barraD.a/2)
         barraD.y-=5;
-    if(keyStates[49]==true && barraD.y<mundo.a-50-barra.l/2)
+    if(keyStates[49]==true && barraD.y<mundo.a-barraD.a/2)
         barraD.y+=5;
-    if(keyStates[115]==true && barraE.y>50+barra.l/2)
+    if(keyStates[115]==true && barraE.y>barraE.a/2)
         barraE.y-=5;
-    if(keyStates[119]==true && barraE.y<mundo.a-50-barra.l/2)
+    if(keyStates[119]==true && barraE.y<mundo.a-barraE.a/2)
         barraE.y+=5;
 
-    glBindTexture(GL_TEXTURE_2D, idTexturaBarra);
-    glPushMatrix();
-        glTranslatef((mundo.l/15)*14, barraD.y, 0);
-        glBegin(GL_TRIANGLE_FAN);
-            glTexCoord2f(0, 0); glVertex3f(-barra.a/2, -barra.l/2, 0);
-            glTexCoord2f(1, 0); glVertex3f(barra.a/2, -barra.l/2, 0);
-            glTexCoord2f(1, 1); glVertex3f(barra.a/2, barra.l/2, 0);
-            glTexCoord2f(0, 1); glVertex3f(-barra.a/2, barra.l/2, 0);
-        glEnd();
-    glPopMatrix();
+    desenhaObjeto(idTexturaBarra, barraD);
     
-    glBindTexture(GL_TEXTURE_2D, idTexturaBarra);
-    glPushMatrix();
-        glTranslatef(mundo.l/15, barraE.y, 0);
-        glBegin(GL_TRIANGLE_FAN);
-            glTexCoord2f(0, 0); glVertex3f(-barra.a/2, -barra.l/2, 0);
-            glTexCoord2f(1, 0); glVertex3f(barra.a/2, -barra.l/2, 0);
-            glTexCoord2f(1, 1); glVertex3f(barra.a/2, barra.l/2, 0);
-            glTexCoord2f(0, 1); glVertex3f(-barra.a/2, barra.l/2, 0);
-        glEnd();
-    glPopMatrix();
+    desenhaObjeto(idTexturaBarra, barraE);
 
-    glBindTexture(GL_TEXTURE_2D, idTexturaBola);
-    glPushMatrix();
-        glTranslatef(bola.x, bola.y, 0);
-        glBegin(GL_TRIANGLE_FAN);
-            glTexCoord2f(0, 0); glVertex3f(-bola.a/2, -bola.l/2, 0);
-            glTexCoord2f(1, 0); glVertex3f(bola.a/2, -bola.l/2, 0);
-            glTexCoord2f(1, 1); glVertex3f(bola.a/2, bola.l/2, 0);
-            glTexCoord2f(0, 1); glVertex3f(-bola.a/2, bola.l/2, 0);
-        glEnd();
-    glPopMatrix();
+    desenhaObjeto(idTexturaBola, bola);
+
+    // diz que o player 1 ganhou quando a bola passa pela direita
+    if((bola.x-bola.l/2) >= mundo.l){
+    desenhaMundo(idTexturaP1W);
+    }
+
+    // diz que o player 2 ganhou quando a bola passa pela esquerda
+    if((bola.x+bola.l/2) <= 0){
+        desenhaMundo(idTexturaP2W);
+    }
+
 
     glDisable(GL_TEXTURE_2D);
 
@@ -220,13 +222,20 @@ void soltaTecla (unsigned char key, int x, int y){
 
 void atualizaCena(int periodo) {
 
-    // muda a direção da bola quando ela atinge alguma borda
-    if(bola.x >= mundo.l || bola.x <= 0)
-        acresce.x *= -1;
+    // muda a direção da bola quando ela atinge a borda do mundo
     if(bola.y >= mundo.a || bola.y <= 0)
         acresce.y *= -1;
+    // muda a direção da bola quando ela atinge a barra da esquerda
+    if(((bola.x-bola.l/2) <= (barraE.x+barraE.l/2)) && 
+        ((barraE.y+barraE.a/2) >= bola.y) &&
+        ((barraE.y-barraE.a/2) <= bola.y))
+        acresce.x *= -1;
+    // muda a direção da bola quando ela atinge a barra da direita
+    if(((bola.x+bola.l/2) >= (barraD.x-barraD.l/2)) && 
+        ((barraD.y+barraD.a/2) >= bola.y) && ((barraD.y-barraD.a/2) <= bola.y))
+        acresce.x *= -1;
     
-    // faz a bola mudar de posição
+    // faz a bola mudar de posição ao longo do tempo (animação)
     bola.x += acresce.x;
     bola.y += acresce.y;
  
@@ -252,9 +261,7 @@ int main(int argc, char** argv) {
     glutKeyboardFunc(teclado);
     glutKeyboardUpFunc(soltaTecla);
 
-    // O prof. tinha colocado 33 (pra ser 30 FPS)
-    // em vez de 1 mas achei que tava devagar
-    glutTimerFunc(0, atualizaCena, 1);
+    glutTimerFunc(0, atualizaCena, 33);
 
     glutMainLoop();
 
