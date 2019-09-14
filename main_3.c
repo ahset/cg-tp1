@@ -306,26 +306,40 @@ void mouseClick(int button, int state, int x, int y)
 
     // fim da conversão de coordenadas da tela para do mundo
 
+    // se tiver na tela do 'exit'
     if(keyStates[27]==true)
+        // se o mouse for clicado
         if(button==GLUT_LEFT_BUTTON && state==GLUT_DOWN){
+            // em cima do botão 'sim'
             if(hovering(worldX, worldY, optyes)){
+                // fecha o jogo
                 exit(0);
             }
+            // em cima do botão 'não'
             else if(hovering(worldX, worldY, optno)){
+                // despausa e sai do 'exit'
                 keyStates[27] = false;
                 keyStates[112] = false;
+                Mix_ResumeMusic();
             }
         }
+    // se tiver na tela do 'restart'
     if(keyStates[114]==true)
+        // se o mouse for clicado
         if(button==GLUT_LEFT_BUTTON && state==GLUT_DOWN){
+            // em cima do botão 'sim'
             if(hovering(worldX, worldY, optyes)){
+                // despausa, sai do 'restart' e reinicia
                 keyStates[114] = false;
                 keyStates[112] = false;
+                Mix_ResumeMusic();
                 restart();
             }
+            // despausa e sai do 'restart'
             else if(hovering(worldX, worldY, optno)){
                 keyStates[114] = false;
                 keyStates[112] = false;
+                Mix_ResumeMusic();
             }
         }
 }
@@ -370,12 +384,13 @@ void mouseHover(int x, int y)
 
 void teclado(unsigned char key, int x, int y) {
     switch (key) {
-        case 27:
+        case 27: // tecla 'esc'
+            // se a tecla é pressionada, altera o valor
+            // para true
             keyStates[key] = true;
-            keyStates[112] = true;
+            keyStates[112] = true; // pausa
+            Mix_PauseMusic();
             break;
-        // se a tecla é pressionada, altera o valor
-        // para true
         case 48: // tecla '0'
             keyStates[key] = true;
             break;
@@ -390,16 +405,19 @@ void teclado(unsigned char key, int x, int y) {
             break;            
         case 112: // tecla 'p'
         // se ela tá true, vira false e vice-versa
-            if(keyStates[key]==true)
-                keyStates[key]=false;
-            else if(keyStates[key]==false)
-                keyStates[key]=true;
+            if(keyStates[key]==true){
+                keyStates[key]=false; // para despausar quando tá pausado
+                Mix_ResumeMusic();
+            }
+            else if(keyStates[key]==false){
+                keyStates[key]=true; // para pausar quando não tá pausado
+                Mix_PauseMusic();
+            }
             break;
         case 114: // tecla 'r'
             keyStates[key] = true;
-        // quando a tecla 'r' é acionada
-        // também pause o jogo
-            keyStates[112] = true;
+            keyStates[112] = true; // pausa
+            Mix_PauseMusic();
             break;
     }
 }
@@ -431,6 +449,7 @@ void atualizaCena(int periodo) {
         // também aumenta a velocidade da bola com o decorrer do tempo
         bola.x += acrescebola.x+glutGet(GLUT_ELAPSED_TIME)/20000;
         bola.y += acrescebola.y+glutGet(GLUT_ELAPSED_TIME)/20000;
+        // faz os buracos mudarem de posição ao longo do tempo (animação)
         buraco1.x += acresceburaco1.x;
         buraco1.y += acresceburaco1.y;
         buraco2.x += acresceburaco2.x;
@@ -463,7 +482,7 @@ void atualizaCena(int periodo) {
         acresceburaco2.x *= -1;
 
 
-    // muda a bola de um buraco para o outro
+    // muda a bola do buraco negro para o buraco branco
     if(colisao(bola, buraco1)){
         bola.x = buraco2.x;
         bola.y = buraco2.y;
