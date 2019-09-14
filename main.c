@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 
 typedef struct {
     float l, a, x, y; // l = largura, a = altura
@@ -21,6 +23,7 @@ dimpos mundo, barraE, barraD, bola, acresce;
 // inicializado com valor falso para todas
 // será usado para verificar se alguma tecla está pressionada
 bool keyStates[256] = {false};
+int teclap = 0;
 
 GLuint idTexturaFundo; // imagem do fundo
 GLuint idTexturaBarra; // imagem da barra
@@ -104,6 +107,9 @@ void inicializa() {
 
     acresce.x = 10; // rand()%10+1;
     acresce.y = 2; // rand()%10+1;
+
+
+    Mix_PlayMusic(Mix_LoadMUS("tentacle-wedding.mp3"), -1);
 }
 
 void desenha() {
@@ -138,6 +144,7 @@ void desenha() {
     // e reinicia
     if((bola.x-bola.l/2) >= mundo.l){
         desenhaMundo(idTexturaP1W);
+
         //inicializa();
     }
 
@@ -148,6 +155,13 @@ void desenha() {
         //inicializa();
     }
 
+    if(teclap%2!=0){
+        acresce.x = acresce.y = 0;
+    }
+    else{
+        acresce.x = 10;
+        acresce.y = 2;
+    }
 
     glDisable(GL_TEXTURE_2D);
 
@@ -199,7 +213,10 @@ void teclado(unsigned char key, int x, int y) {
             break;
         case 119: // tecla 'w'
             keyStates[key] = true;
-            break;            
+            break;     
+        case 112: // tecla 'p'
+            teclap++;
+            break;
     }
 }
 
@@ -240,8 +257,11 @@ void atualizaCena(int periodo) {
     
     // faz a bola mudar de posição ao longo do tempo (animação)
     // também aumenta a velocidade da bola com o decorrer do tempo
-    bola.x += acresce.x+glutGet(GLUT_ELAPSED_TIME)/20000;
-    bola.y += acresce.y+glutGet(GLUT_ELAPSED_TIME)/20000;
+        bola.x += acresce.x+glutGet(GLUT_ELAPSED_TIME)/20000;
+        bola.y += acresce.y+glutGet(GLUT_ELAPSED_TIME)/20000;
+    
+    
+
  
     // pede ao GLUT para redesenhar a tela, assim que possível
     glutPostRedisplay();
@@ -252,9 +272,12 @@ void atualizaCena(int periodo) {
 
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
+    SDL_Init(SDL_INIT_AUDIO);
+    Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
     glutInitWindowSize(1000, 615);
     glutInitWindowPosition(100, 100);
+
 
     glutCreateWindow("Space Ping Pong");
     inicializa();
@@ -271,3 +294,4 @@ int main(int argc, char** argv) {
 
     return 0;
 }
+
