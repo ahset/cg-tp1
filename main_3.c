@@ -15,28 +15,32 @@ typedef struct {
 } dimpos; // tudo que tem dimensões e/ou posição
 
 dimpos mundo, barraE, barraD, bola, buraco1, buraco2, acrescebola,
-acresceburaco1, acresceburaco2, bpause, optyes, optno;
+acresceburaco1, acresceburaco2, bpause, optyes, optno, foguete;
 // barraE é a barra da esquerda e barraD é a barra da direita
 // acrescebola é a variável que muda de sinal quando a bola atinge
 // as bordas do mundo
 bool keyStates[256], optYesOn, optNoOn;
+int ssstop=3;
 // vetor em que cada posição corresponde a uma tecla
 // inicializado com valor falso para todas
 // será usado para verificar se alguma tecla está pressionada
 GLuint idTexturaFundo; // imagem do fundo
 GLuint idTexturaBarra; // imagem da barra
+GLuint idTexturaBarra2; // imagem da outra barra
 GLuint idTexturaBola; // imagem da bola
 GLuint idTexturaP1W; // imagem "player 1 wins"
 GLuint idTexturaP2W; // imagem "player 2 wins"
 GLuint idTexturaBuraco1; // imagem do buraco negro
-GLuint idTexturaBuraco2;
-GLuint idTexturaPause;
-GLuint idTexturaRestart;
-GLuint idTexturaExit;
-GLuint idTexturaYes;
-GLuint idTexturaNo;
-GLuint idTexturaYesOn;
-GLuint idTexturaNoOn;
+GLuint idTexturaBuraco2; // imagem do buraco branco
+GLuint idTexturaPause; // imagem "pause"
+GLuint idTexturaRestart; // imagem "restart"
+GLuint idTexturaExit; // imagem "exit"
+GLuint idTexturaYes; // imagem do botão "yes"
+GLuint idTexturaNo; // imagem do botão "no"
+GLuint idTexturaYesOn; // imagem do botão "yes" quando o mouse passa nele
+GLuint idTexturaNoOn; // imagem do botão "no" quando o mouse passa nele
+GLuint idTexturaFoguete;
+GLuint idTexturaIntro;
 
 GLuint carregaTextura(const char* arquivo) {
     GLuint idTextura = SOIL_load_OGL_texture(
@@ -124,7 +128,6 @@ void inicializa() {
     glClearColor(1, 1, 1, 1);
 
     srand(time(0));
-
     // habilita mesclagem de cores, para termos suporte a texturas
     // com transparência
     glEnable(GL_BLEND );
@@ -132,6 +135,7 @@ void inicializa() {
 
     idTexturaFundo = carregaTextura("background.png");
     idTexturaBarra = carregaTextura("barra.png");
+    idTexturaBarra2 = carregaTextura("barra2.png");
     idTexturaBola = carregaTextura("ufo.png");
     idTexturaP1W = carregaTextura("p1w.png");
     idTexturaP2W = carregaTextura("p2w.png");
@@ -144,10 +148,10 @@ void inicializa() {
     idTexturaNo = carregaTextura("no.png");
     idTexturaYesOn = carregaTextura("yeson.png");
     idTexturaNoOn = carregaTextura("noon.png");
-
+    idTexturaFoguete = carregaTextura("rocket.png");
+    idTexturaIntro = carregaTextura("intro.png");
     // valores iniciais das dimensões dos objetos
     // bem como a posição dos que não mudam de lugar
-
     for(int i=0; i<256; i++)
         keyStates[i] = false;
 
@@ -169,6 +173,11 @@ void inicializa() {
     optyes.x = (mundo.l/20)*8;
     optno.x = (mundo.l/20)*12;
 
+    foguete.x = mundo.l/2;
+    foguete.y = 0;
+    foguete.l = 100;
+    foguete.a = 120;
+
     restart();
 }
 
@@ -176,11 +185,8 @@ void desenha() {
     
     glClear(GL_COLOR_BUFFER_BIT);
     glColor3f (1, 1, 1);
-
     // habilita o uso de texturas
     glEnable(GL_TEXTURE_2D);
-
-    desenhaMundo(idTexturaFundo);
 
     // se alguma das teclas de mudança de posição das barras
     // estiver pressionada (true) e a barra não tiver atingido
@@ -194,17 +200,26 @@ void desenha() {
     if(keyStates[119]==true && barraE.y<mundo.a-barraE.a/2)
         barraE.y+=10;
 
-    desenhaObjeto(idTexturaBarra, barraD);
-    desenhaObjeto(idTexturaBarra, barraE);
-    desenhaObjeto(idTexturaBola, bola);
-    desenhaObjeto(idTexturaBuraco1, buraco1);
-    desenhaObjeto(idTexturaBuraco2, buraco2);
-
+    if(keyStates[0]==false){
+        keyStates[112] = true;
+        Mix_PauseMusic();
+        desenhaMundo(idTexturaIntro);
+        desenhaObjeto(idTexturaFoguete, foguete);
+    }
+    else{
+        keyStates[112] = false;
+        Mix_ResumeMusic();
+        desenhaMundo(idTexturaFundo);
+        desenhaObjeto(idTexturaBarra, barraD);
+        desenhaObjeto(idTexturaBarra2, barraE);
+        desenhaObjeto(idTexturaBola, bola);
+        desenhaObjeto(idTexturaBuraco1, buraco1);
+        desenhaObjeto(idTexturaBuraco2, buraco2);
+    }
     // se a tecla 'p' for apertada uma vez,
     //desenha o símbolo de pause
-    if(keyStates[112]==true)
+    if(keyStates[112]==true && glutGet(GLUT_ELAPSED_TIME)/1000>ssstop)
         desenhaObjeto(idTexturaPause, bpause);
-
     //se a tecla 'r' for apertada, exibe a mensagem de confirmação
     if(keyStates[114]==true){
         desenhaMundo(idTexturaRestart);
@@ -221,7 +236,6 @@ void desenha() {
         else
             desenhaObjeto(idTexturaNo, optno);
     }
-
     //mesma coisa da tecla 'r', mas com 'esc'
     if(keyStates[27]==true){
         desenhaMundo(idTexturaExit);
@@ -234,14 +248,12 @@ void desenha() {
         else
             desenhaObjeto(idTexturaNo, optno);
     }
-
     // diz que o player 1 ganhou quando a bola passa pela direita
     // e reinicia
     if((bola.x-bola.l/2) >= mundo.l){
         desenhaMundo(idTexturaP1W);
         restart();
     }
-
     // diz que o player 2 ganhou quando a bola passa pela esquerda
     // e reinicia
     if((bola.x+bola.l/2) <= 0){
@@ -287,7 +299,6 @@ void mouseClick(int button, int state, int x, int y)
     // início da conversão de coordenadas da tela para do mundo
     // retirado de https://community.khronos.org/t/converting-
     //window-coordinates-to-world-coordinates/16029/8
-
     GLint viewport[4]; //var to hold the viewport info
     GLdouble modelview[16]; //var to hold the modelview info
     GLdouble projection[16]; //var to hold the projection matrix info
@@ -303,9 +314,7 @@ void mouseClick(int button, int state, int x, int y)
     winZ = 0;
     
     gluUnProject(winX, winY, winZ, modelview, projection, viewport, &worldX, &worldY, &worldZ);
-
     // fim da conversão de coordenadas da tela para do mundo
-
     // se tiver na tela do 'exit'
     if(keyStates[27]==true)
         // se o mouse for clicado
@@ -349,8 +358,6 @@ void mouseHover(int x, int y)
     // início da conversão de coordenadas da tela para do mundo
     // retirado de https://community.khronos.org/t/converting-
     //window-coordinates-to-world-coordinates/16029/8
-
-
     GLint viewport[4]; //var to hold the viewport info
     GLdouble modelview[16]; //var to hold the modelview info
     GLdouble projection[16]; //var to hold the projection matrix info
@@ -367,9 +374,8 @@ void mouseHover(int x, int y)
     
     //get the world coordinates from the screen coordinates
     gluUnProject(winX, winY, winZ, modelview, projection, viewport, &worldX, &worldY, &worldZ);
-
     // fim da conversão de coordenadas da tela para do mundo
-
+    // se tiver na tela do 'exit'
     if(keyStates[27]==true || keyStates[114]==true){
         if(hovering(worldX, worldY, optyes))
             optYesOn=true;
@@ -443,6 +449,12 @@ void soltaTecla (unsigned char key, int x, int y){
 
 void atualizaCena(int periodo) {
 
+    if(glutGet(GLUT_ELAPSED_TIME)/1000>ssstop)
+        keyStates[0]=true;
+
+    if(foguete.y<=mundo.a+foguete.a)
+        foguete.y += 15;
+
     // se o jogo não está pausado
     if(keyStates[112]==false){
         // faz a bola mudar de posição ao longo do tempo (animação)
@@ -455,7 +467,10 @@ void atualizaCena(int periodo) {
         buraco2.x += acresceburaco2.x;
         buraco2.y += acresceburaco2.y;
     }
-
+    else if(keyStates[112==true]){
+        bola.x = bola.x;
+        bola.y = bola.y;
+    }
     // muda a direção da bola quando ela atinge a borda do mundo
     if(bola.y >= mundo.a || bola.y <= 0)
         acrescebola.y *= -1;
@@ -502,6 +517,7 @@ int main(int argc, char** argv) {
     glutInit(&argc, argv);
     SDL_Init(SDL_INIT_AUDIO);
     Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096);
+    Mix_PlayChannel(-1, Mix_LoadWAV("rocket.wav"), 0);
     Mix_PlayMusic(Mix_LoadMUS("tentacle-wedding.mp3"), -1);
     Mix_Volume(-1,MIX_MAX_VOLUME/15);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
