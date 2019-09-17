@@ -62,6 +62,13 @@ GLuint carregaTextura(const char* arquivo) {
     return idTextura;
 }
 
+void music(){
+    if(keyStates['p'])
+        Mix_PauseMusic();
+    else
+        Mix_ResumeMusic();
+}
+
 // detecta colisão entre dois objetos
 bool colisao(dimpos um, dimpos dois){
     if(abs(um.x - dois.x) > (um.l/2+dois.l/2) ||
@@ -271,6 +278,7 @@ void desenha() {
 
     desenhaFundo();
 
+    music();
     // se alguma das teclas de mudança de posição das barras
     // estiver pressionada (true) e a barra não tiver atingido
     // a borda do mundo, continua mudando a posição
@@ -287,20 +295,16 @@ void desenha() {
 
     if(!keyStates[0]){
         keyStates[112] = true;
-        Mix_PauseMusic();
         desenhaMundo(idTexturaIntro);
         desenhaObjeto(idTexturaFoguete, foguete);
     }
     else if(keyStates[1]){
         keyStates[112] = true;
         keyStates['r'] = false;
-        Mix_PauseMusic();
         desenhaMundo(idTexturaMenu);
         desenhaObjeto(idTexturaPlay, menuplay);
     }
     else {
-        Mix_ResumeMusic();
-        desenhaFundo();
         desenhaObjeto(idTexturaBarra, barraD);
         desenhaObjeto(idTexturaBarra2, barraE);
         desenhaObjeto(idTexturaBola, bola);
@@ -311,7 +315,6 @@ void desenha() {
     // se a tecla 'p' for apertada uma vez,
     //desenha o símbolo de pause
     if(keyStates[112] && !keyStates[1]){
-        Mix_PauseMusic();
         desenhaObjeto(idTexturaPause, bpause);
     }
 
@@ -321,7 +324,9 @@ void desenha() {
         //se o mouse estiver em cima do botão, muda de cor
         if(menuplay.opt){
             glColor3f(1, 1, 1);
+            glDisable(GL_TEXTURE_2D);
             desenhaPoligono(30, menuplay);
+            glEnable(GL_TEXTURE_2D);
             desenhaObjeto(idTexturaPlay, menuplay);
         }
         //se não, fica com a cor original
@@ -332,7 +337,6 @@ void desenha() {
     //se a tecla 'r' for apertada, exibe a mensagem de confirmação
     if(keyStates[114]){
         keyStates[112]=true;
-        Mix_PauseMusic();
         desenhaMundo(idTexturaRestart);
         //se o mouse estiver em cima do botão, muda de cor
         if(optyes.opt)
@@ -351,7 +355,6 @@ void desenha() {
     //mesma coisa da tecla 'r', mas com 'esc'
     if(keyStates[27]){
         keyStates[112]=true;
-        Mix_PauseMusic();
         desenhaMundo(idTexturaExit);
         if(optyes.opt)
             desenhaObjeto(idTexturaYesOn, optyes);
@@ -456,7 +459,6 @@ void mouseClick(int button, int state, int x, int y)
                 // despausa e sai do 'exit'
                 keyStates[27] = false;
                 keyStates[112] = false;
-                Mix_ResumeMusic();
             }
         }
     // se tiver na tela do 'exit'
@@ -473,7 +475,6 @@ void mouseClick(int button, int state, int x, int y)
                 // despausa e sai do 'exit'
                 keyStates[27] = false;
                 keyStates[112] = false;
-                Mix_ResumeMusic();
             }
         }
     // se tiver na tela do 'restart'
@@ -485,14 +486,12 @@ void mouseClick(int button, int state, int x, int y)
                 // despausa, sai do 'restart' e reinicia
                 keyStates[114] = false;
                 keyStates[112] = false;
-                Mix_ResumeMusic();
                 restart();
             }
             // despausa e sai do 'restart'
             else if(hovering(worldX, worldY, optno)){
                 keyStates[114] = false;
                 keyStates[112] = false;
-                Mix_ResumeMusic();
             }
         }
 
@@ -512,7 +511,6 @@ void mouseHover(int x, int y)
     // início da conversão de coordenadas da tela para do mundo
     // retirado de https://community.khronos.org/t/converting-
     //window-coordinates-to-world-coordinates/16029/8
-
 
     GLint viewport[4]; //var to hold the viewport info
     GLdouble modelview[16]; //var to hold the modelview info
@@ -561,7 +559,6 @@ void teclado(unsigned char key, int x, int y) {
             // para true
             keyStates[key] = true;
             keyStates[112] = true; // pausa
-            Mix_PauseMusic();
             break;
         case 'l': // tecla '0'
             keyStates[key] = true;
@@ -579,17 +576,14 @@ void teclado(unsigned char key, int x, int y) {
         // se ela tá true, vira false e vice-versa
             if(keyStates[key]){
                 keyStates[key]=false; // para despausar quando tá pausado
-                Mix_ResumeMusic();
             }
             else if(!keyStates[key]){
                 keyStates[key]=true; // para pausar quando não tá pausado
-                Mix_PauseMusic();
             }
             break;
         case 114: // tecla 'r'
             keyStates[key] = true;
             keyStates[112] = true; // pausa
-            Mix_PauseMusic();
             break;
     }
 }
