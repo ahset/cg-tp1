@@ -17,7 +17,7 @@ typedef struct {
 
 dimpos mundo, barraE, barraD, bola, buraco1, buraco2, acrescebola,
 acresceburaco1, acresceburaco2, bpause, optyes, optno, foguete, 
-borda_mundo, menuplay;
+borda_mundo, menuplay, auxFundo;
 // barraE é a barra da esquerda e barraD é a barra da direita
 // acrescebola é a variável que muda de sinal quando a bola atinge
 // as bordas do mundo
@@ -88,15 +88,15 @@ bool hovering(float x, float y, dimpos dois){
     return true;    
 }
 
-void displayText( float x, float y, int r, int g, int b, const char *string) {
-    int j = strlen(string);
-
-    glColor3f(r, g, b);
-    glRasterPos2f( x, y );
-    for( int i = 0; i < j; i++ ) {
-        glutBitmapCharacter( GLUT_BITMAP_TIMES_ROMAN_24, string[i] );
-    }
-}
+//void displayText( float x, float y, int r, int g, int b, const char *string) {
+//    int j = strlen(string);
+//
+//    glColor3f(r, g, b);
+//    glRasterPos2f( x, y );
+//    for( int i = 0; i < j; i++ ) {
+//        glutBitmapCharacter( GLUT_BITMAP_TIMES_ROMAN_24, string[i] );
+//    }
+//}
 
 // reseta as posições iniciais dos objetos
 void restart(){
@@ -132,6 +132,32 @@ void desenhaMundo(GLuint id){
         glTexCoord2f(1, 1); glVertex3f(mundo.l, mundo.a, 0);
         glTexCoord2f(0, 1); glVertex3f(0, mundo.a, 0);
     glEnd();
+}
+
+void desenhaFundo(){
+    glBindTexture(GL_TEXTURE_2D, idTexturaFundo);    //binda e desenha o fundo
+    /*
+    glBegin(GL_TRIANGLE_FAN);
+        glTexCoord2f(0, 0); glVertex3f(0, 0, 0);
+        glTexCoord2f(1, 0); glVertex3f(auxFundo.l, 0, 0);
+        glTexCoord2f(1, 1); glVertex3f(auxFundo.l, auxFundo.a, 0);
+        glTexCoord2f(0, 1); glVertex3f(0, auxFundo.a, 0);
+    glEnd();
+    */
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glMatrixMode(GL_TEXTURE);
+    glLoadIdentity();
+    glTranslatef(auxFundo.l/10900, 0, 0);
+    glBegin(GL_TRIANGLE_FAN);
+        glTexCoord2f(0, 0); glVertex3f(0, 0, 0);
+        glTexCoord2f(1, 0); glVertex3f(mundo.l, 0, 0);
+        glTexCoord2f(1, 1); glVertex3f(mundo.l, mundo.a, 0);
+        glTexCoord2f(0, 1); glVertex3f(0, mundo.a, 0);
+    glEnd();
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    
 }
 
 void desenhaObjeto(GLuint id, dimpos objeto){
@@ -205,6 +231,8 @@ void inicializa() {
     mundo.l = 1000;
     mundo.a = 615;
 
+    auxFundo.l = mundo.l;
+    auxFundo.a = mundo.a;
 
     bola.l = bola.a = 50;
 
@@ -241,28 +269,29 @@ void inicializa() {
 
 void desenha() {
     
+    
     glClear(GL_COLOR_BUFFER_BIT);
     glColor3f (1, 1, 1);
 
     // habilita o uso de texturas
     glEnable(GL_TEXTURE_2D);
 
-    desenhaMundo(idTexturaFundo);
+    desenhaFundo();
 
     music();
     // se alguma das teclas de mudança de posição das barras
     // estiver pressionada (true) e a barra não tiver atingido
     // a borda do mundo, continua mudando a posição
-    if(keyStates['l'] && barraD.y>barraD.a/2)
-        barraD.y-=10;
-    if(keyStates['o'] && barraD.y<mundo.a-barraD.a/2)
-        barraD.y+=10;
-    if(keyStates[115] && barraE.y>barraE.a/2)
-        barraE.y-=10;
-    if(keyStates[119] && barraE.y<mundo.a-barraE.a/2)
-        barraE.y+=10;
-
-
+    if(keyStates[112] == false){
+        if(keyStates['l'] && barraD.y>barraD.a/2)
+            barraD.y-=10;
+        if(keyStates['o'] && barraD.y<mundo.a-barraD.a/2)
+            barraD.y+=10;
+        if(keyStates[115] && barraE.y>barraE.a/2)
+            barraE.y-=10;
+        if(keyStates[119] && barraE.y<mundo.a-barraE.a/2)
+            barraE.y+=10;
+    }
 
     if(!keyStates[0]){
         keyStates[112] = true;
@@ -276,7 +305,6 @@ void desenha() {
         desenhaObjeto(idTexturaPlay, menuplay);
     }
     else {
-        desenhaMundo(idTexturaFundo);
         desenhaObjeto(idTexturaBarra, barraD);
         desenhaObjeto(idTexturaBarra2, barraE);
         desenhaObjeto(idTexturaBola, bola);
@@ -341,6 +369,8 @@ void desenha() {
     // diz que o player 1 ganhou quando a bola passa pela direita
     // e reinicia
     if((bola.x-bola.l/2) >= mundo.l){
+        auxFundo.l = mundo.l;
+        auxFundo.a = mundo.a;
         desenhaMundo(idTexturaP1W);
         restart();
     }
@@ -348,11 +378,13 @@ void desenha() {
     // diz que o player 2 ganhou quando a bola passa pela esquerda
     // e reinicia
     if((bola.x+bola.l/2) <= 0){
+        auxFundo.l = mundo.l;
+        auxFundo.a = mundo.a;
         desenhaMundo(idTexturaP2W);
         restart();
     }
 
-    displayText(mundo.l/2, mundo.a/2, 1, 1, 1, "teste");
+    //displayText(mundo.l/2, mundo.a/2, 1, 1, 1, "teste");
 
     glDisable(GL_TEXTURE_2D);
 
@@ -509,7 +541,7 @@ void mouseHover(int x, int y)
         else
             optno.opt=false;
     }
-
+    //tela menu
     if(keyStates[1]){
         if(hovering(worldX, worldY, menuplay))
             menuplay.opt=true;
@@ -521,6 +553,7 @@ void mouseHover(int x, int y)
 
 void teclado(unsigned char key, int x, int y) {
     switch (key) {
+        case 'q': exit(0); break;
         case 27: // tecla 'esc'
             // se a tecla é pressionada, altera o valor
             // para true
@@ -576,6 +609,7 @@ void soltaTecla (unsigned char key, int x, int y){
 
 void atualizaCena(int periodo) {
 
+    auxFundo.l += 100;
     if(glutGet(GLUT_ELAPSED_TIME)/1000>ssstop)
         keyStates[0]=true;
 
