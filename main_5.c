@@ -17,13 +17,15 @@ typedef struct {
 
 dimpos mundo, barraE, barraD, bola, buraco1, buraco2, acrescebola,
 acresceburaco1, acresceburaco2, bpause, optyes, optno, foguete, 
-borda_mundo, menuplay, auxFundo;
+borda_mundo, menuplay, auxFundo, intro, menu, restartbut, exitbut,
+placarE, placarD, pw;
 // barraE é a barra da esquerda e barraD é a barra da direita
 // acrescebola é a variável que muda de sinal quando a bola atinge
 // as bordas do mundo
 bool keyStates[256];
-GLint ssstop=1.9;
-GLint tempo_colisao = 10;
+GLfloat ssstop=1.9;
+GLint tempo_colisao = 0;
+GLint placarE_atual = 0, placarD_atual = 0;
 // vetor em que cada posição corresponde a uma tecla
 // inicializado com valor falso para todas
 // será usado para verificar se alguma tecla está pressionada
@@ -46,6 +48,10 @@ GLuint idTexturaFoguete;
 GLuint idTexturaIntro;
 GLuint idTexturaMenu;
 GLuint idTexturaPlay;
+GLuint idTextura1; GLuint idTextura5; GLuint idTextura10;
+GLuint idTextura2; GLuint idTextura7; GLuint idTextura11;
+GLuint idTextura3; GLuint idTextura8; GLuint idTextura0;
+GLuint idTextura4; GLuint idTextura9; GLuint idTextura6;
 
 GLuint carregaTextura(const char* arquivo) {
     GLuint idTextura = SOIL_load_OGL_texture(
@@ -123,6 +129,49 @@ void restart(){
     acresceburaco2.y = -(rand()%10+1);
 }
 
+void desenhaObjeto(GLuint id, dimpos objeto){
+    glBindTexture(GL_TEXTURE_2D, id);
+    glPushMatrix();
+        glTranslatef(objeto.x, objeto.y, 0);
+        glBegin(GL_TRIANGLE_FAN);
+            glTexCoord2f(0, 0); glVertex3f(-objeto.l/2, -objeto.a/2, 0);
+            glTexCoord2f(1, 0); glVertex3f(objeto.l/2, -objeto.a/2, 0);
+            glTexCoord2f(1, 1); glVertex3f(objeto.l/2, objeto.a/2, 0);
+            glTexCoord2f(0, 1); glVertex3f(-objeto.l/2, objeto.a/2, 0);
+        glEnd();
+    glPopMatrix();   
+}
+
+
+void desenhaPlacar(int placar_atual, dimpos placar){
+    switch(placar_atual){
+        case 0: desenhaObjeto(idTextura0, placar);
+            break;
+        case 1: desenhaObjeto(idTextura1, placar);
+            break;
+        case 2: desenhaObjeto(idTextura2, placar);
+            break;
+        case 3: desenhaObjeto(idTextura3, placar);
+            break;
+        case 4: desenhaObjeto(idTextura4, placar);
+            break;
+        case 5: desenhaObjeto(idTextura5, placar);
+            break;
+        case 6: desenhaObjeto(idTextura6, placar);
+            break;
+        case 7: desenhaObjeto(idTextura7, placar);
+            break;
+        case 8: desenhaObjeto(idTextura8, placar);
+            break;
+        case 9: desenhaObjeto(idTextura9, placar);
+            break;
+        case 10: desenhaObjeto(idTextura10, placar);
+            break;
+        case 11: desenhaObjeto(idTextura11, placar);
+            break;
+    }
+}
+
 // desenha texturas do tamanho do mundo
 void desenhaMundo(GLuint id){
     glBindTexture(GL_TEXTURE_2D, id);
@@ -144,11 +193,13 @@ void desenhaFundo(){
         glTexCoord2f(0, 1); glVertex3f(0, auxFundo.a, 0);
     glEnd();
     */
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glMatrixMode(GL_TEXTURE);
-    glLoadIdentity();
-    glTranslatef(auxFundo.l/10900, 0, 0);
+    if(!keyStates['p']){
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glMatrixMode(GL_TEXTURE);
+        glLoadIdentity();
+        glTranslatef(auxFundo.l/30000, 0, 0);
+    }
     glBegin(GL_TRIANGLE_FAN);
         glTexCoord2f(0, 0); glVertex3f(0, 0, 0);
         glTexCoord2f(1, 0); glVertex3f(mundo.l, 0, 0);
@@ -158,19 +209,6 @@ void desenhaFundo(){
     glLoadIdentity();
     glMatrixMode(GL_MODELVIEW);
     
-}
-
-void desenhaObjeto(GLuint id, dimpos objeto){
-    glBindTexture(GL_TEXTURE_2D, id);
-    glPushMatrix();
-        glTranslatef(objeto.x, objeto.y, 0);
-        glBegin(GL_TRIANGLE_FAN);
-            glTexCoord2f(0, 0); glVertex3f(-objeto.l/2, -objeto.a/2, 0);
-            glTexCoord2f(1, 0); glVertex3f(objeto.l/2, -objeto.a/2, 0);
-            glTexCoord2f(1, 1); glVertex3f(objeto.l/2, objeto.a/2, 0);
-            glTexCoord2f(0, 1); glVertex3f(-objeto.l/2, objeto.a/2, 0);
-        glEnd();
-    glPopMatrix();   
 }
 
 void desenhaPoligono(int numLados, dimpos pos){
@@ -185,8 +223,8 @@ void desenhaPoligono(int numLados, dimpos pos){
     glBegin(GL_TRIANGLE_FAN);
       glVertex3f(pos.x,pos.y,0);
       for(int i=0; i<numLados; i++)
-        glVertex3f(pos.x+(pos.l/2)*cos(desloc+i*2*pi/numLados),pos.y+(pos.l/2)*sin(desloc+i*2*pi/numLados),0);
-      glVertex3f(pos.x+(pos.l/2)*cos(desloc),pos.y+(pos.l/2)*sin(desloc),0);
+        glVertex3f(pos.x+(pos.l/3)*cos(desloc+i*2*pi/numLados),pos.y+(pos.l/3)*sin(desloc+i*2*pi/numLados),0);
+      glVertex3f(pos.x+(pos.l/3)*cos(desloc),pos.y+(pos.l/3)*sin(desloc),0);
     glEnd();     
 }
 
@@ -219,6 +257,18 @@ void inicializa() {
     idTexturaIntro = carregaTextura("intro.png");
     idTexturaMenu = carregaTextura("menu.png");
     idTexturaPlay = carregaTextura("menu-conflict.png");
+    idTextura1 = carregaTextura("number-one.png");
+    idTextura2 = carregaTextura("number-two.png");
+    idTextura3 = carregaTextura("number-three.png");
+    idTextura4 = carregaTextura("number-four.png");
+    idTextura5 = carregaTextura("number-five.png");
+    idTextura6 = carregaTextura("number-six.png");
+    idTextura7 = carregaTextura("number-seven.png");
+    idTextura8 = carregaTextura("number-eight.png");
+    idTextura9 = carregaTextura("number-nine.png");
+    idTextura10 = carregaTextura("number-ten.png");
+    idTextura11 = carregaTextura("number-eleven.png");
+    idTextura0 = carregaTextura("number-zero.png");
 
     // valores iniciais das dimensões dos objetos
     // bem como a posição dos que não mudam de lugar
@@ -233,6 +283,26 @@ void inicializa() {
 
     auxFundo.l = mundo.l;
     auxFundo.a = mundo.a;
+
+    pw.x = exitbut.x = restartbut.x = menu.x = mundo.l/2;
+    intro.y = bola.y = mundo.a/2;
+    intro.x = mundo.l/2;
+    menu.y = mundo.a - 100;
+    pw.y = exitbut.y = restartbut.y = mundo.a - 200;
+    placarE.y = placarD.y = mundo.a - 70;
+    placarE.x = mundo.l/8;
+    placarD.x = (mundo.l/8)*7;
+
+    placarE.l = placarE.a = placarD.l = placarD.a = 50;
+
+    intro.l = menu.l = 900;
+    intro.a = menu.a = 100;
+
+    pw.l = restartbut.l = 800;
+    exitbut.a = restartbut.a = 60;
+    exitbut.l = 600;
+    pw.a = 200;
+
 
     bola.l = bola.a = 50;
 
@@ -249,7 +319,7 @@ void inicializa() {
     optno.x = (mundo.l/20)*12;
 
 
-    foguete.x = mundo.l/2;
+    foguete.x = mundo.l/2-40;
     foguete.y = 0;
     foguete.l = 100;
     foguete.a = 120;
@@ -279,6 +349,7 @@ void desenha() {
     desenhaFundo();
 
     music();
+
     // se alguma das teclas de mudança de posição das barras
     // estiver pressionada (true) e a barra não tiver atingido
     // a borda do mundo, continua mudando a posição
@@ -294,38 +365,70 @@ void desenha() {
     }
 
     if(!keyStates[0]){
-        keyStates[112] = true;
-        desenhaMundo(idTexturaIntro);
+        keyStates['p'] = true;
+        keyStates['r'] = false;
+        keyStates[27] = false;
+        desenhaObjeto(idTexturaIntro, intro);
         desenhaObjeto(idTexturaFoguete, foguete);
     }
     else if(keyStates[1]){
-        keyStates[112] = true;
+        keyStates['p'] = true;
         keyStates['r'] = false;
-        desenhaMundo(idTexturaMenu);
+        keyStates[27] = false;
+        desenhaObjeto(idTexturaMenu, menu);
         desenhaObjeto(idTexturaPlay, menuplay);
     }
-    else {
+    else if(placarE_atual>10 || placarD_atual>10){
+        keyStates['p'] = true;
+        printf("entrou no primeiro\n");
+        printf("PlacarE %d\n", placarE_atual);
+        printf("PlacarD %d\n", placarD_atual);
+        printf("entrou no segundo\n");
+        //se o mouse estiver em cima do botão, muda de cor
+        if(optyes.opt)
+            desenhaObjeto(idTexturaYesOn, optyes);
+        //se não, fica com a cor original
+        else 
+            desenhaObjeto(idTexturaYes, optyes);
+        //se o mouse estiver em cima do botão, muda de cor
+        if(optno.opt)
+            desenhaObjeto(idTexturaNoOn, optno);
+        //se não, fica com a cor original
+        else
+            desenhaObjeto(idTexturaNo, optno);
+        keyStates[3]=true;
+        if(placarE_atual>10)
+            desenhaObjeto(idTexturaP1W,pw);
+        else if(placarD_atual>10)
+            desenhaObjeto(idTexturaP2W,pw);
+        
+    }
+    else if(!keyStates['r'] && !keyStates[27]){
         desenhaObjeto(idTexturaBarra, barraD);
         desenhaObjeto(idTexturaBarra2, barraE);
         desenhaObjeto(idTexturaBola, bola);
         desenhaObjeto(idTexturaBuraco1, buraco1);
         desenhaObjeto(idTexturaBuraco2, buraco2);
+        desenhaPlacar(placarE_atual, placarE);
+        desenhaPlacar(placarD_atual, placarD);
     }
 
     // se a tecla 'p' for apertada uma vez,
     //desenha o símbolo de pause
-    if(keyStates[112] && !keyStates[1]){
+    if(keyStates[112] && !keyStates[1]
+        && !keyStates['r'] && !keyStates[27]
+        && !keyStates[3]){
         desenhaObjeto(idTexturaPause, bpause);
     }
 
     if(keyStates[1] && glutGet(GLUT_ELAPSED_TIME)/1000>ssstop){
         keyStates[112]=true;
-        desenhaMundo(idTexturaMenu);
+        desenhaObjeto(idTexturaMenu, menu);
         //se o mouse estiver em cima do botão, muda de cor
         if(menuplay.opt){
             glColor3f(1, 1, 1);
             glDisable(GL_TEXTURE_2D);
-            desenhaPoligono(30, menuplay);
+            desenhaPoligono(50, menuplay);
             glEnable(GL_TEXTURE_2D);
             desenhaObjeto(idTexturaPlay, menuplay);
         }
@@ -335,9 +438,10 @@ void desenha() {
     }
 
     //se a tecla 'r' for apertada, exibe a mensagem de confirmação
-    if(keyStates[114]){
-        keyStates[112]=true;
-        desenhaMundo(idTexturaRestart);
+    if(keyStates['r']){
+        keyStates['p']=true;
+        keyStates[27] = false;
+        desenhaObjeto(idTexturaRestart, restartbut);
         //se o mouse estiver em cima do botão, muda de cor
         if(optyes.opt)
             desenhaObjeto(idTexturaYesOn, optyes);
@@ -354,8 +458,9 @@ void desenha() {
 
     //mesma coisa da tecla 'r', mas com 'esc'
     if(keyStates[27]){
-        keyStates[112]=true;
-        desenhaMundo(idTexturaExit);
+        keyStates['p']=true;
+        keyStates['r'] = false;
+        desenhaObjeto(idTexturaExit, exitbut);
         if(optyes.opt)
             desenhaObjeto(idTexturaYesOn, optyes);
         else 
@@ -369,18 +474,18 @@ void desenha() {
     // diz que o player 1 ganhou quando a bola passa pela direita
     // e reinicia
     if((bola.x-bola.l/2) >= mundo.l){
-        auxFundo.l = mundo.l;
-        auxFundo.a = mundo.a;
-        desenhaMundo(idTexturaP1W);
+//        auxFundo.l = mundo.l;
+//        auxFundo.a = mundo.a;
+        placarE_atual++;
         restart();
     }
 
     // diz que o player 2 ganhou quando a bola passa pela esquerda
     // e reinicia
     if((bola.x+bola.l/2) <= 0){
-        auxFundo.l = mundo.l;
-        auxFundo.a = mundo.a;
-        desenhaMundo(idTexturaP2W);
+//        auxFundo.l = mundo.l;
+//        auxFundo.a = mundo.a;
+        placarD_atual++;
         restart();
     }
 
@@ -495,6 +600,33 @@ void mouseClick(int button, int state, int x, int y)
             }
         }
 
+    if(keyStates[3])
+        // se o mouse for clicado
+        if(button==GLUT_LEFT_BUTTON && state==GLUT_DOWN){
+            // em cima do botão 'sim'
+            if(hovering(worldX, worldY, optyes)){
+                // despausa, sai do 'restart' e reinicia
+                keyStates[114] = false;
+                keyStates[112] = false;
+                keyStates[27] = false;
+                keyStates[3] = false;
+                restart();
+                placarE_atual=0;
+                placarD_atual=0;
+            }
+            // despausa e sai do 'restart'
+            else if(hovering(worldX, worldY, optno)){
+                keyStates[114] = false;
+                keyStates[27] = false;
+                keyStates[3] = false;
+                keyStates[1] = true;
+                placarE_atual=0;
+                placarD_atual=0;
+            }
+        }    
+
+
+
     // se tiver no 'menu'
     if(keyStates[1])
         // se o mouse for clicado
@@ -531,7 +663,7 @@ void mouseHover(int x, int y)
 
     // fim da conversão de coordenadas da tela para do mundo
 
-    if(keyStates[27] || keyStates[114]){
+    if(keyStates[27] || keyStates[114] || keyStates[3]){
         if(hovering(worldX, worldY, optyes))
             optyes.opt=true;
         else
@@ -543,6 +675,13 @@ void mouseHover(int x, int y)
     }
     //tela menu
     if(keyStates[1]){
+        if(hovering(worldX, worldY, menuplay))
+            menuplay.opt=true;
+        else
+            menuplay.opt=false;
+    }
+
+    if(keyStates[3]){
         if(hovering(worldX, worldY, menuplay))
             menuplay.opt=true;
         else
