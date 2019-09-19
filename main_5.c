@@ -18,7 +18,7 @@ typedef struct {
 dimpos mundo, barraE, barraD, bola, buraco1, buraco2, acrescebola,
 acresceburaco1, acresceburaco2, bpause, optyes, optno, foguete, 
 borda_mundo, menuplay, auxFundo, intro, menu, restartbut, exitbut,
-placarE, placarD, pw;
+placarE, placarD, pw, coroa;
 // barraE é a barra da esquerda e barraD é a barra da direita
 // acrescebola é a variável que muda de sinal quando a bola atinge
 // as bordas do mundo
@@ -52,6 +52,7 @@ GLuint idTextura1; GLuint idTextura5; GLuint idTextura10;
 GLuint idTextura2; GLuint idTextura7; GLuint idTextura11;
 GLuint idTextura3; GLuint idTextura8; GLuint idTextura0;
 GLuint idTextura4; GLuint idTextura9; GLuint idTextura6;
+GLuint idTexturaCoroa;
 
 GLuint carregaTextura(const char* arquivo) {
     GLuint idTextura = SOIL_load_OGL_texture(
@@ -223,8 +224,8 @@ void desenhaPoligono(int numLados, dimpos pos){
     glBegin(GL_TRIANGLE_FAN);
       glVertex3f(pos.x,pos.y,0);
       for(int i=0; i<numLados; i++)
-        glVertex3f(pos.x+(pos.l/3)*cos(desloc+i*2*pi/numLados),pos.y+(pos.l/3)*sin(desloc+i*2*pi/numLados),0);
-      glVertex3f(pos.x+(pos.l/3)*cos(desloc),pos.y+(pos.l/3)*sin(desloc),0);
+        glVertex3f(pos.x+(pos.l/2)*1.1*cos(desloc+i*2*pi/numLados),pos.y+(pos.l/2)*1.1*sin(desloc+i*2*pi/numLados),0);
+      glVertex3f(pos.x+(pos.l/2)*1.1*cos(desloc),pos.y+(pos.l/2)*1.1*sin(desloc),0);
     glEnd();     
 }
 
@@ -269,6 +270,7 @@ void inicializa() {
     idTextura10 = carregaTextura("number-ten.png");
     idTextura11 = carregaTextura("number-eleven.png");
     idTextura0 = carregaTextura("number-zero.png");
+    idTexturaCoroa = carregaTextura("crown.png");
 
     // valores iniciais das dimensões dos objetos
     // bem como a posição dos que não mudam de lugar
@@ -289,11 +291,12 @@ void inicializa() {
     intro.x = mundo.l/2;
     menu.y = mundo.a - 100;
     pw.y = exitbut.y = restartbut.y = mundo.a - 200;
-    placarE.y = placarD.y = mundo.a - 70;
+    coroa.y = placarE.y = placarD.y = mundo.a - 70;
     placarE.x = mundo.l/8;
     placarD.x = (mundo.l/8)*7;
 
     placarE.l = placarE.a = placarD.l = placarD.a = 50;
+    coroa.l = coroa.a = 30;
 
     intro.l = menu.l = 900;
     intro.a = menu.a = 100;
@@ -380,10 +383,6 @@ void desenha() {
     }
     else if(placarE_atual>10 || placarD_atual>10){
         keyStates['p'] = true;
-        printf("entrou no primeiro\n");
-        printf("PlacarE %d\n", placarE_atual);
-        printf("PlacarD %d\n", placarD_atual);
-        printf("entrou no segundo\n");
         //se o mouse estiver em cima do botão, muda de cor
         if(optyes.opt)
             desenhaObjeto(idTexturaYesOn, optyes);
@@ -401,7 +400,6 @@ void desenha() {
             desenhaObjeto(idTexturaP1W,pw);
         else if(placarD_atual>10)
             desenhaObjeto(idTexturaP2W,pw);
-        
     }
     else if(!keyStates['r'] && !keyStates[27]){
         desenhaObjeto(idTexturaBarra, barraD);
@@ -410,7 +408,15 @@ void desenha() {
         desenhaObjeto(idTexturaBuraco1, buraco1);
         desenhaObjeto(idTexturaBuraco2, buraco2);
         desenhaPlacar(placarE_atual, placarE);
-        desenhaPlacar(placarD_atual, placarD);
+        desenhaPlacar(placarD_atual, placarD);    
+        if(placarD_atual==10 && placarE_atual<10){
+            coroa.x = (mundo.l/8)*7 + 50;
+            desenhaObjeto(idTexturaCoroa, coroa);
+        }
+        else if(placarE_atual==10 && placarD_atual<10){
+            coroa.x = (mundo.l/8) - 50;
+            desenhaObjeto(idTexturaCoroa, coroa);
+        }
     }
 
     // se a tecla 'p' for apertada uma vez,
