@@ -121,6 +121,7 @@ void restart(int i){
 
     if(i)
     {
+        Mix_PlayMusic(Mix_LoadMUS("tentacle-wedding.mp3"), -1);
         buraco1.x = mundo.l/2+bola.l*2;
         buraco1.y = mundo.a/2+bola.a*2;
 
@@ -849,7 +850,6 @@ int main(int argc, char** argv) {
 
     glutTimerFunc(0, atualizaCena, 33);
 
-    Mix_PlayMusic(Mix_LoadMUS("tentacle-wedding.mp3"), -1);
     glutMainLoop();
 
     return 0;
