@@ -13,7 +13,7 @@
 typedef struct {
     GLfloat l, a, x, y; // l = largura, a = altura
     bool opt;
-} dimpos; // tudo que tem dimensões e/ou posição
+} dimpos; // tudo que tem dimensões e/ou posição e estado true/false
 
 dimpos mundo, barraE, barraD, bola, buraco1, buraco2, acrescebola,
 acresceburaco1, acresceburaco2, bpause, optyes, optno, foguete, 
@@ -22,10 +22,14 @@ placarE, placarD, pw, coroa, replay;
 // barraE é a barra da esquerda e barraD é a barra da direita
 // acrescebola é a variável que muda de sinal quando a bola atinge
 // as bordas do mundo
-bool keyStates[256];
-GLfloat ssstop=1.9;
-GLint tempo_colisao = 0;
+bool keyStates[256]; // vetor de estados de teclas (também usado
+//pra algumas telas específicas)
+GLfloat ssstop=1.9; // tempo da splash screen
+GLint tempo_colisao = 0; // gambiarra pra evitar bug
 GLint placarE_atual = 0, placarD_atual = 0;
+GLint vmaxbola = 15; // velocidade máxima da bola
+GLfloat acrescevelocidade = 1.05; // incremento na velocidade
+GLint velocidadebarra = 10; // incremento na posição da barra
 // vetor em que cada posição corresponde a uma tecla
 // inicializado com valor falso para todas
 // será usado para verificar se alguma tecla está pressionada
@@ -70,7 +74,8 @@ GLuint carregaTextura(const char* arquivo) {
 
     return idTextura;
 }
-
+// pausa a música se o jogo estiver em alguma
+// tela pausada
 void music(){
     if(keyStates['p'])
         Mix_PauseMusic();
@@ -82,7 +87,9 @@ void music(){
 bool colisao(dimpos um, dimpos dois){
     if(abs(um.x - dois.x) > (um.l/2+dois.l/2) ||
         abs(um.y - dois.y) > (um.a/2+dois.a/2)
-        || tempo_colisao>5) 
+        || tempo_colisao>5) // define um tempo pra
+        // ocorrer a próxima colisão e não ficar
+        // recochiteando demais
         return false;
     tempo_colisao=10;
     return true;    
@@ -97,17 +104,7 @@ bool hovering(float x, float y, dimpos dois){
     return true;    
 }
 
-//void displayText( float x, float y, int r, int g, int b, const char *string) {
-//    int j = strlen(string);
-//
-//    glColor3f(r, g, b);
-//    glRasterPos2f( x, y );
-//    for( int i = 0; i < j; i++ ) {
-//        glutBitmapCharacter( GLUT_BITMAP_TIMES_ROMAN_24, string[i] );
-//    }
-//}
-
-// reseta as posições iniciais dos objetos
+// reseta as posições iniciais de alguns objetos
 void restart(int i){
     bola.x = mundo.l/2;
     bola.y = mundo.a/2;
@@ -120,7 +117,7 @@ void restart(int i){
     acresceburaco2.y = -(rand()%10+1);
 
     if(i)
-    {
+    {// reseta só quando recomeça tudo
         Mix_PlayMusic(Mix_LoadMUS("tentacle-wedding.mp3"), -1);
         buraco1.x = mundo.l/2+bola.l*2;
         buraco1.y = mundo.a/2+bola.a*2;
@@ -177,17 +174,6 @@ void desenhaPlacar(int placar_atual, dimpos placar){
     }
 }
 
-// desenha texturas do tamanho do mundo
-void desenhaMundo(GLuint id){
-    glBindTexture(GL_TEXTURE_2D, id);
-    glBegin(GL_TRIANGLE_FAN);
-        glTexCoord2f(0, 0); glVertex3f(0, 0, 0);
-        glTexCoord2f(1, 0); glVertex3f(mundo.l, 0, 0);
-        glTexCoord2f(1, 1); glVertex3f(mundo.l, mundo.a, 0);
-        glTexCoord2f(0, 1); glVertex3f(0, mundo.a, 0);
-    glEnd();
-}
-
 void desenhaFundo(){
     glBindTexture(GL_TEXTURE_2D, idTexturaFundo);    //binda e desenha o fundo
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
@@ -206,6 +192,7 @@ void desenhaFundo(){
     
 }
 
+// desenha contorno dos botões
 void desenhaPoligono(int numLados, dimpos pos){
     
     float desloc, pi=atan(1)*4;
@@ -277,8 +264,12 @@ void inicializa() {
     for(int i=0; i<256; i++)
         keyStates[i] = false;
 
+    // entra como true pra abrir o menu
+    // depois da splah screen
     keyStates[1]=true;
 
+    // seta valores de posição e tamanho pra
+    // objetos da cena
     mundo.l = 1000;
     mundo.a = 615;
 
@@ -311,7 +302,8 @@ void inicializa() {
     replay.l = 500;
     exitbut.a = restartbut.a = 60;
     exitbut.l = 600;
-    replay.a = pw.a = 60;
+    replay.a = 60;
+    pw.a = 50;
 
     bola.l = bola.a = 50;
 
@@ -362,17 +354,17 @@ void desenha() {
     // se alguma das teclas de mudança de posição das barras
     // estiver pressionada (true) e a barra não tiver atingido
     // a borda do mundo, continua mudando a posição
-    if(keyStates[112] == false){
+    if(keyStates['p'] == false){
         if(keyStates['l'] && barraD.y>barraD.a/2)
-            barraD.y-=10;
+            barraD.y-=velocidadebarra;
         if(keyStates['o'] && barraD.y<mundo.a-barraD.a/2)
-            barraD.y+=10;
-        if(keyStates[115] && barraE.y>barraE.a/2)
-            barraE.y-=10;
-        if(keyStates[119] && barraE.y<mundo.a-barraE.a/2)
-            barraE.y+=10;
+            barraD.y+=velocidadebarra;
+        if(keyStates['s'] && barraE.y>barraE.a/2)
+            barraE.y-=velocidadebarra;
+        if(keyStates['w'] && barraE.y<mundo.a-barraE.a/2)
+            barraE.y+=velocidadebarra;
     }
-
+    // splash screen
     if(!keyStates[0]){
         keyStates['p'] = true;
         keyStates['r'] = false;
@@ -380,6 +372,7 @@ void desenha() {
         desenhaObjeto(idTexturaIntro, intro);
         desenhaObjeto(idTexturaFoguete, foguete);
     }
+    // menu
     else if(keyStates[1]){
         keyStates['p'] = true;
         keyStates['r'] = false;
@@ -403,6 +396,7 @@ void desenha() {
         else
             desenhaObjeto(idTexturaNo, optno);
         keyStates[3]=true;
+        // desenha mensagem de que um jogador ganhou
         if(placarE_atual>10){
             desenhaObjeto(idTexturaP1W,pw);
             desenhaObjeto(idTexturaReplay,replay);
@@ -420,6 +414,7 @@ void desenha() {
         desenhaObjeto(idTexturaBuraco2, buraco2);
         desenhaPlacar(placarE_atual, placarE);
         desenhaPlacar(placarD_atual, placarD);    
+        // desenha a coroa em quem estiver ganhando
         if(placarD_atual>placarE_atual){
             coroa.x = (mundo.l/8)*7 - 55;
             desenhaObjeto(idTexturaCoroa, coroa);
@@ -428,6 +423,7 @@ void desenha() {
             coroa.x = (mundo.l/8) + 55;
             desenhaObjeto(idTexturaCoroa, coroa);
         }
+        // faz borda no placar de quem estiver prester a ganhar
         if(placarD_atual==10){
             glDisable(GL_TEXTURE_2D);
             desenhaPoligono(50, placarD);
@@ -444,16 +440,16 @@ void desenha() {
 
     // se a tecla 'p' for apertada uma vez,
     //desenha o símbolo de pause
-    if(keyStates[112] && !keyStates[1]
+    if(keyStates['p'] && !keyStates[1]
         && !keyStates['r'] && !keyStates[27]
         && !keyStates[3]){
         desenhaObjeto(idTexturaPause, bpause);
     }
 
+    // se tiver passado o tempo da splash screen
     if(keyStates[1] && glutGet(GLUT_ELAPSED_TIME)/1000>ssstop){
-        keyStates[112]=true;
-        //desenhaObjeto(idTexturaMenu, menu);
-        //se o mouse estiver em cima do botão, muda de cor
+        keyStates['p']=true;
+        // se o mouse estiver em cima do botão, faz borda branca
         if(menuplay.opt){
             glColor3f(1, 1, 1);
             glDisable(GL_TEXTURE_2D);
@@ -461,7 +457,7 @@ void desenha() {
             glEnable(GL_TEXTURE_2D);
             desenhaObjeto(idTexturaPlay, menuplay);
         }
-        //se não, fica com a cor original
+        //se não, fica normal
         else 
             desenhaObjeto(idTexturaPlay, menuplay);
     }
@@ -500,16 +496,16 @@ void desenha() {
             desenhaObjeto(idTexturaNo, optno);
     }
 
-    // diz que o player 1 ganhou quando a bola passa pela direita
-    // e reinicia
+    // quando a bola passa pela direita, aumenta um ponto pro jogador 1
+    // e reinicia os valores da bola
     if((bola.x-bola.l/2) >= mundo.l){
         desenhaObjeto(idTexturaBack, menuplay);
         placarE_atual++;
         restart(0);
     }
 
-    // diz que o player 2 ganhou quando a bola passa pela esquerda
-    // e reinicia
+    // quando a bola passa pela esquerda, aumenta um ponto pro jogador 2
+    // e reinicia os valores da bola
     if((bola.x+bola.l/2) <= 0){
         desenhaObjeto(idTexturaBack, menuplay);
         placarD_atual++;
@@ -582,7 +578,7 @@ void mouseClick(int button, int state, int x, int y)
         if(button==GLUT_LEFT_BUTTON && state==GLUT_DOWN){
             // em cima do botão 'play'
             if(hovering(worldX, worldY, menuplay)){
-                // fecha o jogo
+                // despausa e sai do 'menu'
                 keyStates[1]=false;
                 keyStates['p']=false;
             }
@@ -604,7 +600,7 @@ void mouseClick(int button, int state, int x, int y)
             }
         }
     // se tiver na tela do 'restart'
-    if(keyStates[114])
+    if(keyStates['r'])
         // se o mouse for clicado
         if(button==GLUT_LEFT_BUTTON && state==GLUT_DOWN){
             // em cima do botão 'sim'
@@ -620,13 +616,14 @@ void mouseClick(int button, int state, int x, int y)
                 keyStates[112] = false;
             }
         }
-
+    
+    // tela replay
     if(keyStates[3])
         // se o mouse for clicado
         if(button==GLUT_LEFT_BUTTON && state==GLUT_DOWN){
             // em cima do botão 'sim'
             if(hovering(worldX, worldY, optyes)){
-                // despausa, sai do 'restart' e reinicia
+                // despausa, sai do 'replay' e reinicia
                 keyStates[114] = false;
                 keyStates[112] = false;
                 keyStates[27] = false;
@@ -635,7 +632,7 @@ void mouseClick(int button, int state, int x, int y)
                 placarE_atual=0;
                 placarD_atual=0;
             }
-            // despausa e sai do 'restart'
+            // despausa e sai do 'replay'
             else if(hovering(worldX, worldY, optno)){
                 keyStates[114] = false;
                 keyStates[27] = false;
@@ -672,7 +669,7 @@ void mouseHover(int x, int y)
 
     // fim da conversão de coordenadas da tela para do mundo
 
-    if(keyStates[27] || keyStates[114] || keyStates[3]){
+    if(keyStates[27] || keyStates['r'] || keyStates[3]){
         if(hovering(worldX, worldY, optyes))
             optyes.opt=true;
         else
@@ -689,7 +686,7 @@ void mouseHover(int x, int y)
         else
             menuplay.opt=false;
     }
-
+    //tela replay
     if(keyStates[3]){
         if(hovering(worldX, worldY, menuplay))
             menuplay.opt=true;
@@ -701,38 +698,43 @@ void mouseHover(int x, int y)
 
 void teclado(unsigned char key, int x, int y) {
     switch (key) {
-        case 'q': exit(0); break;
         case 27: // tecla 'esc'
             // se a tecla é pressionada, altera o valor
             // para true
-            keyStates[key] = true;
+            keyStates[27] = true;
             keyStates[112] = true; // pausa
             break;
         case 'l':
-            keyStates[key] = true;
+        case 'L':
+            keyStates['l'] = true;
             break;
         case 'o':
-            keyStates[key] = true;
+        case 'O':
+            keyStates['o'] = true;
             break;
-        case 115: // tecla 's'
-            keyStates[key] = true;
+        case 's':
+        case 'S':
+            keyStates['s'] = true;
             break;
-        case 119: // tecla 'w'
-            keyStates[key] = true;
+        case 'w':
+        case 'W':
+            keyStates['w'] = true;
             break;            
-        case 112: // tecla 'p'
+        case 'p':
+        case 'P':
         // se ela tá true, vira false e vice-versa
-            if(keyStates[key]){
-                keyStates[key]=false; // para despausar quando tá pausado
+            if(keyStates['p']){
+                keyStates['p']=false; // para despausar quando tá pausado
             }
-            else if(!keyStates[key]){
+            else if(!keyStates['p']){
                 Mix_PlayChannel(-1, Mix_LoadWAV("pause.wav"), 0);
                 keyStates[key]=true; // para pausar quando não tá pausado
             }
             break;
-        case 114: // tecla 'r'
-            keyStates[key] = true;
-            keyStates[112] = true; // pausa
+        case 'r':
+        case 'R':
+            keyStates['r'] = true;
+            keyStates['p'] = true; // pausa
             break;
     }
 }
@@ -741,17 +743,21 @@ void soltaTecla (unsigned char key, int x, int y){
     switch (key) {
         // se a tecla é solta, volta o valor
         // para false
-        case 'l': // tecla '0'
-            keyStates[key] = false;
+        case 'l':
+        case 'L':
+            keyStates['l'] = false;
             break;
-        case 'o': // tecla '1'
-            keyStates[key] = false;
+        case 'o':
+        case 'O':
+            keyStates['o'] = false;
             break;
-        case 115: // tecla 's'
-            keyStates[key] = false;
+        case 's':
+        case 'S':
+            keyStates['s'] = false;
             break;
-        case 119: // tecla 'w'
-            keyStates[key] = false;
+        case 'w':
+        case 'W':
+            keyStates['w'] = false;
             break; 
     }
 }
@@ -768,28 +774,31 @@ void atualizaCena(int periodo) {
     // muda a direção da bola quando ela atinge a borda do mundo
     if(bola.y + bola.a/2 >= mundo.a || bola.y - bola.a/2 <= 0)
         acrescebola.y *= -1;
-    //else if(bola.y + bola.a/2 >= mundo.a + 10){
-        //bola.y = mundo.a - bola.a/2;
-        //acrescebola.y *= -1;
-    //}
     // muda a direção da bola quando ela atinge a barra da esquerda
+    // também aumenta a velocidade da bola até um limite
     if(colisao(bola, barraE)){
-        acrescebola.x *= -1;
+        if(fabs(acrescebola.x)<vmaxbola)
+            acrescebola.x *= -acrescevelocidade;
+        else
+            acrescebola.x *= -1;
         Mix_PlayChannel(-1, Mix_LoadWAV("laser-shoot.wav"), 0);
     }
     // muda a direção da bola quando ela atinge a barra da direita
+    // também aumenta a velocidade da bola até um limite
     if(colisao(bola, barraD)){
-        acrescebola.x *= -1;
+        if(fabs(acrescebola.x)<vmaxbola)
+            acrescebola.x *= -acrescevelocidade;
+        else
+            acrescebola.x *= -1;
         Mix_PlayChannel(-1, Mix_LoadWAV("laser-shoot.wav"), 0);
     }
 
     // se o jogo não está pausado
     if(!keyStates[112]){
-        // faz a bola mudar de posição ao longo do tempo (animação)
-        // também aumenta a velocidade da bola com as batidas nas barras
-        bola.x += acrescebola.x*1.1;
-        bola.y += acrescebola.y*1.1;
-        // faz os buracos mudarem de posição ao longo do tempo (animação)
+        // faz a bola mudar de posição ao longo do tempo
+        bola.x += acrescebola.x;
+        bola.y += acrescebola.y;
+        // faz os buracos mudarem de posição ao longo do tempo
         buraco1.x += acresceburaco1.x;
         buraco1.y += acresceburaco1.y;
         buraco2.x += acresceburaco2.x;
@@ -797,7 +806,7 @@ void atualizaCena(int periodo) {
     }
 
     // muda a direção dos buracos se atingem a borda de um
-    // espaço no meio do mundo
+    // espaço imaginário no meio do mundo
     if(buraco1.y >= (mundo.a/5)*4 || buraco1.y <= mundo.a/5)
         acresceburaco1.y *= -1;
     if(buraco1.x >= (mundo.l/5)*4 || buraco1.x <= mundo.l/5)
