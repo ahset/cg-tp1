@@ -488,7 +488,6 @@ void desenha() {
     if(keyStates[27]){
         keyStates['p']=true;
         keyStates['r'] = false;
-        Mix_PlayChannel(-1, Mix_LoadWAV("alert.wav"), 0);
         desenhaObjeto(idTexturaExit, exitbut);
         if(optyes.opt)
             desenhaObjeto(idTexturaYesOn, optyes);
@@ -583,7 +582,6 @@ void mouseClick(int button, int state, int x, int y)
             // em cima do botão 'play'
             if(hovering(worldX, worldY, menuplay)){
                 // fecha o jogo
-                Mix_PlayChannel(-1, Mix_LoadWAV("confirm.wav"), 0);
                 keyStates[1]=false;
                 keyStates['p']=false;
             }
@@ -595,13 +593,11 @@ void mouseClick(int button, int state, int x, int y)
             // em cima do botão 'sim'
             if(hovering(worldX, worldY, optyes)){
                 // fecha o jogo
-                Mix_PlayChannel(-1, Mix_LoadWAV("confirm.wav"), 0);
                 exit(0);
             }
             // em cima do botão 'não'
             else if(hovering(worldX, worldY, optno)){
                 // despausa e sai do 'exit'
-                Mix_PlayChannel(-1, Mix_LoadWAV("confirm.wav"), 0);
                 keyStates[27] = false;
                 keyStates[112] = false;
             }
@@ -613,14 +609,12 @@ void mouseClick(int button, int state, int x, int y)
             // em cima do botão 'sim'
             if(hovering(worldX, worldY, optyes)){
                 // despausa, sai do 'restart' e reinicia
-                Mix_PlayChannel(-1, Mix_LoadWAV("confirm.wav"), 0);
                 keyStates[114] = false;
                 keyStates[112] = false;
                 restart(1);
             }
             // despausa e sai do 'restart'
             else if(hovering(worldX, worldY, optno)){
-                Mix_PlayChannel(-1, Mix_LoadWAV("confirm.wav"), 0);
                 keyStates[114] = false;
                 keyStates[112] = false;
             }
@@ -632,7 +626,6 @@ void mouseClick(int button, int state, int x, int y)
             // em cima do botão 'sim'
             if(hovering(worldX, worldY, optyes)){
                 // despausa, sai do 'restart' e reinicia
-                Mix_PlayChannel(-1, Mix_LoadWAV("confirm.wav"), 0);
                 keyStates[114] = false;
                 keyStates[112] = false;
                 keyStates[27] = false;
@@ -643,7 +636,6 @@ void mouseClick(int button, int state, int x, int y)
             }
             // despausa e sai do 'restart'
             else if(hovering(worldX, worldY, optno)){
-                Mix_PlayChannel(-1, Mix_LoadWAV("confirm.wav"), 0);
                 keyStates[114] = false;
                 keyStates[27] = false;
                 keyStates[3] = false;
@@ -712,7 +704,6 @@ void teclado(unsigned char key, int x, int y) {
         case 27: // tecla 'esc'
             // se a tecla é pressionada, altera o valor
             // para true
-            Mix_PlayChannel(-1, Mix_LoadWAV("alert.wav"), 0);
             keyStates[key] = true;
             keyStates[112] = true; // pausa
             break;
@@ -739,7 +730,6 @@ void teclado(unsigned char key, int x, int y) {
             }
             break;
         case 114: // tecla 'r'
-            Mix_PlayChannel(-1, Mix_LoadWAV("alert.wav"), 0);
             keyStates[key] = true;
             keyStates[112] = true; // pausa
             break;
