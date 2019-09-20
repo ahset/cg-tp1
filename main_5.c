@@ -111,6 +111,7 @@ void restart(int i){
 
     acrescebola.x = 10;
     acrescebola.y = 2;
+    // velocidade dos buracos é aleatória
     acresceburaco1.x = (rand()%10+1);
     acresceburaco1.y = (rand()%10+1);
     acresceburaco2.x = -(rand()%10+1);
@@ -596,7 +597,7 @@ void mouseClick(int button, int state, int x, int y)
             else if(hovering(worldX, worldY, optno)){
                 // despausa e sai do 'exit'
                 keyStates[27] = false;
-                keyStates[112] = false;
+                keyStates['p'] = false;
             }
         }
     // se tiver na tela do 'restart'
@@ -606,14 +607,14 @@ void mouseClick(int button, int state, int x, int y)
             // em cima do botão 'sim'
             if(hovering(worldX, worldY, optyes)){
                 // despausa, sai do 'restart' e reinicia
-                keyStates[114] = false;
-                keyStates[112] = false;
+                keyStates['r'] = false;
+                keyStates['p'] = false;
                 restart(1);
             }
             // despausa e sai do 'restart'
             else if(hovering(worldX, worldY, optno)){
-                keyStates[114] = false;
-                keyStates[112] = false;
+                keyStates['r'] = false;
+                keyStates['p'] = false;
             }
         }
     
@@ -624,8 +625,8 @@ void mouseClick(int button, int state, int x, int y)
             // em cima do botão 'sim'
             if(hovering(worldX, worldY, optyes)){
                 // despausa, sai do 'replay' e reinicia
-                keyStates[114] = false;
-                keyStates[112] = false;
+                keyStates['r'] = false;
+                keyStates['p'] = false;
                 keyStates[27] = false;
                 keyStates[3] = false;
                 restart(1);
@@ -634,7 +635,7 @@ void mouseClick(int button, int state, int x, int y)
             }
             // despausa e sai do 'replay'
             else if(hovering(worldX, worldY, optno)){
-                keyStates[114] = false;
+                keyStates['r'] = false;
                 keyStates[27] = false;
                 keyStates[3] = false;
                 keyStates[1] = true;
@@ -702,7 +703,7 @@ void teclado(unsigned char key, int x, int y) {
             // se a tecla é pressionada, altera o valor
             // para true
             keyStates[27] = true;
-            keyStates[112] = true; // pausa
+            keyStates['p'] = true; // pausa
             break;
         case 'l':
         case 'L':
@@ -794,7 +795,7 @@ void atualizaCena(int periodo) {
     }
 
     // se o jogo não está pausado
-    if(!keyStates[112]){
+    if(!keyStates['p']){
         // faz a bola mudar de posição ao longo do tempo
         bola.x += acrescebola.x;
         bola.y += acrescebola.y;
