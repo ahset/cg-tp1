@@ -14,8 +14,8 @@ $ sudo apt-get install libsdl2-mixer-dev
 $ sudo apt-get install libsdl-mixer1.2-dev
 ```
 <br>
-Para jogar, digite `make run` no terminal.<br>
-To play the game, type `make run` in the terminal.<br>
+Para jogar, digite `make run` no terminal.
+To play the game, type `make run` in the terminal.
 <br>
 Para remover os arquivos gerados, digite `make clean`.<br>
 To remove the files generated, type `make clean`.<br>
