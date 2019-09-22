@@ -20,6 +20,11 @@ To play the game, type `make run` in the terminal.
 Para remover os arquivos gerados, digite `make clean`.<br>
 To remove the files generated, type `make clean`.
 
+As teclas "w" e "s" controlam a barra do jogador 1 e as teclas "o" e "l" do jogador 2.<br>
+Aperte "esc" para sair, "r" para reiniciar o jogo e "p" para pausar.<br>
+The "w" and "s" keys control player's 1 bar and the "o" and "s" keys control player 2's.<br>
+Press "esc" to exit the game, "r" to restart and "p" to pause.
+
 Divirta-se!<br>
 Enjoy!
 
