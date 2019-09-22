@@ -1,5 +1,5 @@
 # Descrição / Description
-Jogo de ping pong criado em OpenGL e C para a aula de Computção Gráfica do curso de Engenharia de Computação do CEFET-MG, ministrada pelo prof. Flávio Roberto dos Santos Coutinho.
+Jogo de ping pong criado em OpenGL e C para a aula de Computação Gráfica do curso de Engenharia de Computação do CEFET-MG, ministrada pelo prof. Flávio Roberto dos Santos Coutinho.
 
 Ping pong game created using OpenGL and C for the Computer Graphics class from the CEFET-MG's Computer Engineering course, taught by prof. Flávio Roberto dos Santos Coutinho.
 
