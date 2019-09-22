@@ -24,6 +24,6 @@ Divirta-se!<br>
 Enjoy!
 
 # Screenshots
-![alt text](https://github.com/ahset/cg-tp1/blob/master/Screenshot%20from%202019-09-22%2015-58-35.png?raw=true)
-![alt text](https://github.com/ahset/cg-tp1/blob/master/Screenshot%20from%202019-09-22%2015-59-24.png?raw=true)
-![alt text](https://github.com/ahset/cg-tp1/blob/master/Screenshot%20from%202019-09-22%2016-02-35.png?raw=true)
+![](https://github.com/ahset/cg-tp1/blob/master/Screenshot%20from%202019-09-22%2015-58-35.png?raw=true)
+![](https://github.com/ahset/cg-tp1/blob/master/Screenshot%20from%202019-09-22%2015-59-24.png?raw=true)
+![](https://github.com/ahset/cg-tp1/blob/master/Screenshot%20from%202019-09-22%2016-02-35.png?raw=true)
