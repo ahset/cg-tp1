@@ -25,5 +25,5 @@ Enjoy!
 
 # Screenshots
 ![](https://github.com/ahset/cg-tp1/blob/master/images/Screenshot%20from%202019-09-22%2015-58-35.png?raw=true)
-![](https://github.com/ahset/cg-tp1/blob/master/images/Screenshot%20from%202019-09-22%2015-59-24.png?raw=true)
+![](https://github.com/ahset/cg-tp1/blob/master/images/Screenshot%20from%202019-09-22%2019-12-55.png?raw=true)
 ![](https://github.com/ahset/cg-tp1/blob/master/images/Screenshot%20from%202019-09-22%2016-02-35.png?raw=true)
