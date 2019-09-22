@@ -728,7 +728,6 @@ void teclado(unsigned char key, int x, int y) {
                 keyStates['p']=false; // para despausar quando tá pausado
             }
             else if(!keyStates['p']){
-                Mix_PlayChannel(-1, Mix_LoadWAV("pause.wav"), 0);
                 keyStates[key]=true; // para pausar quando não tá pausado
             }
             break;
