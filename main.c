@@ -1,64 +1,5 @@
-#include <SOIL/SOIL.h>
-#include <GL/glew.h>
-#include <GL/freeglut.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <time.h>
-#include <unistd.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_mixer.h>
-
-typedef struct {
-    GLfloat l, a, x, y; // l = largura, a = altura
-    bool opt;
-} dimpos; // tudo que tem dimensões e/ou posição e estado true/false
-
-dimpos mundo, barraE, barraD, bola, buraco1, buraco2, acrescebola,
-acresceburaco1, acresceburaco2, bpause, optyes, optno, foguete, 
-borda_mundo, menuplay, auxFundo, intro, /*menu, */restartbut, exitbut,
-placarE, placarD, pw, coroa, replay;
-// barraE é a barra da esquerda e barraD é a barra da direita
-// acrescebola é a variável que muda de sinal quando a bola atinge
-// as bordas do mundo
-bool keyStates[256]; // vetor de estados de teclas (também usado
-//pra algumas telas específicas)
-GLfloat ssstop=1.9; // tempo da splash screen
-GLint tempo_colisao = 0; // gambiarra pra evitar bug
-GLint placarE_atual = 0, placarD_atual = 0;
-GLint vmaxbola = 15; // velocidade máxima da bola
-GLfloat acrescevelocidade = 1.05; // incremento na velocidade
-GLint velocidadebarra = 10; // incremento na posição da barra
-// vetor em que cada posição corresponde a uma tecla
-// inicializado com valor falso para todas
-// será usado para verificar se alguma tecla está pressionada
-GLuint idTexturaFundo; // imagem do fundo
-GLuint idTexturaBarra; // imagem da barra
-GLuint idTexturaBarra2; // imagem da outra barra
-GLuint idTexturaBola; // imagem da bola
-GLuint idTexturaP1W; // imagem "player 1 wins"
-GLuint idTexturaP2W; // imagem "player 2 wins"
-GLuint idTexturaBuraco1; // imagem do buraco negro
-GLuint idTexturaBuraco2;
-GLuint idTexturaPause;
-GLuint idTexturaRestart; // imagem "restart"
-GLuint idTexturaExit; // imagem "exit"
-GLuint idTexturaYes; // imagem do botão "yes"
-GLuint idTexturaNo; // imagem do botão "no"
-GLuint idTexturaYesOn; // imagem do botão "yes" quando o mouse passa nele
-GLuint idTexturaNoOn; // imagem do botão "no" quando o mouse passa nele
-GLuint idTexturaFoguete;
-GLuint idTexturaIntro;
-//GLuint idTexturaMenu;
-GLuint idTexturaPlay;
-GLuint idTextura1; GLuint idTextura5; GLuint idTextura10;
-GLuint idTextura2; GLuint idTextura7; GLuint idTextura11;
-GLuint idTextura3; GLuint idTextura8; GLuint idTextura0;
-GLuint idTextura4; GLuint idTextura9; GLuint idTextura6;
-GLuint idTexturaCoroa;
-GLuint idTexturaReplay;
-GLuint idTexturaBack;
+#include "libraries.h"
+#include "variables.h"
 
 GLuint carregaTextura(const char* arquivo) {
     GLuint idTextura = SOIL_load_OGL_texture(
@@ -119,7 +60,7 @@ void restart(int i){
 
     if(i)
     {// reseta só quando recomeça tudo
-        Mix_PlayMusic(Mix_LoadMUS("tentacle-wedding.mp3"), -1);
+        Mix_PlayMusic(Mix_LoadMUS("sounds/tentacle-wedding.mp3"), -1);
         buraco1.x = mundo.l/2+bola.l*2;
         buraco1.y = mundo.a/2+bola.a*2;
 
@@ -190,7 +131,6 @@ void desenhaFundo(){
     glEnd();
     glLoadIdentity();
     glMatrixMode(GL_MODELVIEW);
-    
 }
 
 // desenha contorno dos botões
@@ -224,40 +164,39 @@ void inicializa() {
     glEnable(GL_BLEND );
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    idTexturaFundo = carregaTextura("background.png");
-    idTexturaBarra = carregaTextura("barra.png");
-    idTexturaBarra2 = carregaTextura("barra2.png");
-    idTexturaBola = carregaTextura("ufo.png");
-    idTexturaP1W = carregaTextura("p1w.png");
-    idTexturaP2W = carregaTextura("p2w.png");
-    idTexturaBuraco1 = carregaTextura("black-hole.png");
-    idTexturaBuraco2 = carregaTextura("white-hole.png");
-    idTexturaPause = carregaTextura("pause-button.png");
-    idTexturaRestart = carregaTextura("restart.png");
-    idTexturaExit = carregaTextura("exit.png");
-    idTexturaYes = carregaTextura("yes.png");
-    idTexturaNo = carregaTextura("no.png");
-    idTexturaYesOn = carregaTextura("yeson.png");
-    idTexturaNoOn = carregaTextura("noon.png");
-    idTexturaFoguete = carregaTextura("rocket.png");
-    idTexturaIntro = carregaTextura("intro.png");
-    //idTexturaMenu = carregaTextura("menu.png");
-    idTexturaPlay = carregaTextura("menu-conflict.png");
-    idTextura1 = carregaTextura("number-one.png");
-    idTextura2 = carregaTextura("number-two.png");
-    idTextura3 = carregaTextura("number-three.png");
-    idTextura4 = carregaTextura("number-four.png");
-    idTextura5 = carregaTextura("number-five.png");
-    idTextura6 = carregaTextura("number-six.png");
-    idTextura7 = carregaTextura("number-seven.png");
-    idTextura8 = carregaTextura("number-eight.png");
-    idTextura9 = carregaTextura("number-nine.png");
-    idTextura10 = carregaTextura("number-ten.png");
-    idTextura11 = carregaTextura("number-eleven.png");
-    idTextura0 = carregaTextura("number-zero.png");
-    idTexturaCoroa = carregaTextura("crown.png");
-    idTexturaReplay = carregaTextura("replay.png");
-    idTexturaBack = carregaTextura("return.png");
+    idTexturaFundo = carregaTextura("images/background.png");
+    idTexturaBarra = carregaTextura("images/barra.png");
+    idTexturaBarra2 = carregaTextura("images/barra2.png");
+    idTexturaBola = carregaTextura("images/ufo.png");
+    idTexturaP1W = carregaTextura("images/p1w.png");
+    idTexturaP2W = carregaTextura("images/p2w.png");
+    idTexturaBuraco1 = carregaTextura("images/black-hole.png");
+    idTexturaBuraco2 = carregaTextura("images/white-hole.png");
+    idTexturaPause = carregaTextura("images/pause-button.png");
+    idTexturaRestart = carregaTextura("images/restart.png");
+    idTexturaExit = carregaTextura("images/exit.png");
+    idTexturaYes = carregaTextura("images/yes.png");
+    idTexturaNo = carregaTextura("images/no.png");
+    idTexturaYesOn = carregaTextura("images/yeson.png");
+    idTexturaNoOn = carregaTextura("images/noon.png");
+    idTexturaFoguete = carregaTextura("images/rocket.png");
+    idTexturaIntro = carregaTextura("images/intro.png");
+    idTexturaPlay = carregaTextura("images/menu-conflict.png");
+    idTextura1 = carregaTextura("images/number-one.png");
+    idTextura2 = carregaTextura("images/number-two.png");
+    idTextura3 = carregaTextura("images/number-three.png");
+    idTextura4 = carregaTextura("images/number-four.png");
+    idTextura5 = carregaTextura("images/number-five.png");
+    idTextura6 = carregaTextura("images/number-six.png");
+    idTextura7 = carregaTextura("images/number-seven.png");
+    idTextura8 = carregaTextura("images/number-eight.png");
+    idTextura9 = carregaTextura("images/number-nine.png");
+    idTextura10 = carregaTextura("images/number-ten.png");
+    idTextura11 = carregaTextura("images/number-eleven.png");
+    idTextura0 = carregaTextura("images/number-zero.png");
+    idTexturaCoroa = carregaTextura("images/crown.png");
+    idTexturaReplay = carregaTextura("images/replay.png");
+    idTexturaBack = carregaTextura("images/return.png");
 
     // valores iniciais das dimensões dos objetos
     // bem como a posição dos que não mudam de lugar
@@ -408,6 +347,36 @@ void desenha() {
         }
     }
     else if(!keyStates['r'] && !keyStates[27]){
+        glDisable(GL_TEXTURE_2D);
+        glBegin(GL_LINE_LOOP);
+            glVertex2f(mundo.l/2, mundo.a-10);
+            glVertex2f(mundo.l/2, 10);
+        glEnd(); 
+        glBegin(GL_LINE_LOOP);
+            glVertex2f(10, 10);
+            glVertex2f(mundo.l/2-10, 10);
+        glEnd(); 
+        glBegin(GL_LINE_LOOP);
+            glVertex2f(mundo.l/2+10, 10);
+            glVertex2f(mundo.l-10, 10);
+        glEnd(); 
+        glBegin(GL_LINE_LOOP);
+            glVertex2f(10, 10);
+            glVertex2f(10, mundo.a-10);
+        glEnd(); 
+        glBegin(GL_LINE_LOOP);
+            glVertex2f(mundo.l-10, 10);
+            glVertex2f(mundo.l-10, mundo.a-10);
+        glEnd(); 
+        glBegin(GL_LINE_LOOP);
+            glVertex2f(10, mundo.a-10);
+            glVertex2f(mundo.l/2-10, mundo.a-10);
+        glEnd(); 
+        glBegin(GL_LINE_LOOP);
+            glVertex2f(mundo.l/2+10, mundo.a-10);
+            glVertex2f(mundo.l-10, mundo.a-10);
+        glEnd(); 
+        glEnable(GL_TEXTURE_2D);
         desenhaObjeto(idTexturaBarra, barraD);
         desenhaObjeto(idTexturaBarra2, barraE);
         desenhaObjeto(idTexturaBola, bola);
@@ -774,6 +743,7 @@ void atualizaCena(int periodo) {
     // muda a direção da bola quando ela atinge a borda do mundo
     if(bola.y + bola.a/2 >= mundo.a || bola.y - bola.a/2 <= 0)
         acrescebola.y *= -1;
+        
     // muda a direção da bola quando ela atinge a barra da esquerda
     // também aumenta a velocidade da bola até um limite
     if(colisao(bola, barraE)){
@@ -781,7 +751,7 @@ void atualizaCena(int periodo) {
             acrescebola.x *= -acrescevelocidade;
         else
             acrescebola.x *= -1;
-        Mix_PlayChannel(-1, Mix_LoadWAV("laser-shoot.wav"), 0);
+        Mix_PlayChannel(-1, Mix_LoadWAV("sounds/laser-shoot.wav"), 0);
     }
     // muda a direção da bola quando ela atinge a barra da direita
     // também aumenta a velocidade da bola até um limite
@@ -790,7 +760,7 @@ void atualizaCena(int periodo) {
             acrescebola.x *= -acrescevelocidade;
         else
             acrescebola.x *= -1;
-        Mix_PlayChannel(-1, Mix_LoadWAV("laser-shoot.wav"), 0);
+        Mix_PlayChannel(-1, Mix_LoadWAV("sounds/laser-shoot.wav"), 0);
     }
 
     // se o jogo não está pausado
@@ -823,7 +793,7 @@ void atualizaCena(int periodo) {
         bola.y = buraco2.y;
         acrescebola.x *= -1;
         acrescebola.y *= -1;
-        Mix_PlayChannel(-1, Mix_LoadWAV("black-hole.wav"), 0);
+        Mix_PlayChannel(-1, Mix_LoadWAV("sounds/black-hole.wav"), 0);
     } 
 
     tempo_colisao--;
@@ -839,7 +809,7 @@ int main(int argc, char** argv) {
     glutInit(&argc, argv);
     SDL_Init(SDL_INIT_AUDIO);
     Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096);
-    Mix_PlayChannel(-1, Mix_LoadWAV("rocket.wav"), 0);
+    Mix_PlayChannel(-1, Mix_LoadWAV("sounds/rocket.wav"), 0);
     Mix_Volume(-1,MIX_MAX_VOLUME/15);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
     glutInitWindowSize(1000, 615);
