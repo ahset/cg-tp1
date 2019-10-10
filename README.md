@@ -28,6 +28,9 @@ Press "esc" to exit the game, "r" to restart and "p" to pause.
 Divirta-se!<br>
 Enjoy!
 
+Assista o jogo em https://www.youtube.com/watch?v=lhrxWf0Xt-s.
+Watch the game on https://www.youtube.com/watch?v=lhrxWf0Xt-s.
+
 # Screenshots
 ![](https://github.com/ahset/cg-tp1/blob/master/images/Screenshot%20from%202019-09-22%2015-58-35.png?raw=true)
 ![](https://github.com/ahset/cg-tp1/blob/master/images/Screenshot%20from%202019-09-22%2019-12-55.png?raw=true)
